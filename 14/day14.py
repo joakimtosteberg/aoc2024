@@ -56,3 +56,39 @@ def calculate_safety(robots, width, height):
     return safety_score
         
 print(f"part1: {calculate_safety(move_robots(robots, 100), width, height)}")
+
+def draw_robots(s, robots, width, height, bs):
+    grid = {}
+    for robot in robots:
+        rect = pygame.Rect(robot.pos.x*bs, robot.pos.y*bs, bs, bs)
+        pygame.draw.rect(s, (200,200,200), rect)
+
+
+import pygame
+pygame.init()
+s = pygame.display.set_mode((width*6, height*6))
+
+clock = pygame.time.Clock()
+i = 0
+direction = 0
+while True:
+    clock.tick(30)
+    events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                i-=1
+            elif event.key == pygame.K_RIGHT:
+                i+=1
+            elif event.key == pygame.K_UP:
+                direction = 1
+            elif event.key == pygame.K_DOWN:
+                direction = -1
+        if event.type == pygame.KEYUP:
+            direction = 0
+
+    pygame.display.set_caption(str(i))
+    s.fill((0,0,0))
+    draw_robots(s, move_robots(robots, i), width, height, 5)
+    pygame.display.flip()
+    i+=direction
