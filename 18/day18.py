@@ -36,8 +36,7 @@ def bfs(blocked_list, size, num_bytes):
 
 print(f"part1: {bfs(blocked_list, 71, 1024)}")
         
-#for i in range(1024, len(blocked_list)):
-for i in range(0, len(blocked_list)):
+for i in range(1024, len(blocked_list)):
     if bfs(blocked_list, 71, i) == None:
         print(f"part2: {blocked_list[i-1]}")
         break
