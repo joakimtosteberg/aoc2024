@@ -1,3 +1,4 @@
+import collections
 import sys
 
 secrets =[]
@@ -13,35 +14,30 @@ def get_next_secret(secret):
     return secret
 
 
-changes = []
-prices = []
-
+sequence_bananas = {}
 secret_sum = 0
 for secret in secrets:
-    changes.append([])
     last = secret % 10
-    prices.append([])
+    local_lookup = set()
+    seq_queue = collections.deque(maxlen=4)
     for i in range(0,2000):
         secret = get_next_secret(secret)
         price = secret % 10
-        changes[-1].append(price - last)
-        prices[-1].append(price)
+        change = price - last
         last = price
+
+        seq_queue.appendleft(change)
+        if i < 3:
+            continue
+        seq = tuple(seq_queue)
+        if seq not in local_lookup:
+            local_lookup.add(seq)
+            if seq not in sequence_bananas:
+                sequence_bananas[seq] = price
+            else:
+                sequence_bananas[seq] += price
+
     secret_sum += secret
 
 print(f"part1: {secret_sum}")
-
-sequence_bananas = {}
-for change, price in zip(changes,prices):
-    local_lookup = set()
-    for i in range(4,len(change)+1):
-        sequence = tuple(change[i-4:i])
-        if sequence in local_lookup:
-            continue
-        local_lookup.add(sequence)
-        if sequence not in sequence_bananas:
-            sequence_bananas[sequence] = price[i-1]
-        else:
-            sequence_bananas[sequence] += price[i-1]
-
 print(f"part2: {max(sequence_bananas.values())}")
