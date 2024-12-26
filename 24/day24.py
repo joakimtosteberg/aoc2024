@@ -12,6 +12,9 @@ class Gate:
         self.op = op
         self.out = out
 
+    def __repr__(self):
+        return f"{self.x} {self.op} {self.y} -> {self.out}"
+
 with open(sys.argv[1]) as f:
     for line in f:
         row = line.strip()
@@ -54,13 +57,80 @@ def simulate(input_gates, input_wires):
 
 print(f"part1: {simulate(gates, wires)}")
 
-def simulate_input(gates, x, y):
-    wires = {}
-    for i in range(0,45):
-        wires[f"x{i:0>2}"] = 1 if x & 2**i else 0
-        wires[f"y{i:0>2}"] = 1 if y & 2**i else 0
+swap = [('ffj','z08'), ('gjh','z22'), ('jdr','z31'),('kfm','dwp')]
+swap_list = []
+swap_dict = {}
+for pair in swap:
+    swap_dict[pair[0]] = pair[1]
+    swap_dict[pair[1]] = pair[0]
+    swap_list.append(pair[0])
+    swap_list.append(pair[1])
 
-    return simulate(gates, wires)
+print(f"part2: {','.join(sorted(swap_list))}")
+
+for gate in gates:
+    if gate.out in swap_dict:
+        gate.out = swap_dict[gate.out]
+
+gate_dict = {}
+for gate in gates:
+    gate_dict[gate.out] = gate
+
+adders = {}
+local_carry = {}
+carry_outs = {}
+bad_gates = list()
+for gate in gates:
+    if gate.x[0] in ['x','y']:
+        if gate.op == "XOR":
+            adders[gate.out] = gate
+        elif gate.op == "AND":
+            local_carry[gate.out] = gate
+        elif gate.op == "OR":
+            carry_outs[gate.out] = gate
+        else:
+            print(f"Bad gate: {gate}")
+        if gate.out[0] == 'z' and gate.out != 'z00':
+            print(f"Exepcted input gate to not go to output: {gate}")
+            bad_gates.append(gate)
 
 
-print(f"0x{simulate_input(gates, 0, 0xFFFFFFFFFFFFF):02x}")
+carry_adders = {}
+carry_overs = {}
+for gate in gates:
+    if gate.op == "XOR" and gate.out not in adders:
+        carry_adders[gate.out] = gate
+    elif gate.op == "AND" and gate.out not in local_carry:
+        carry_overs[gate.out] = gate
+
+
+for adder in adders.values():
+    if adder.out not in gate_dict:
+        print(f"Adder directly output to final: {adder}")
+
+    if gate_dict[adder.out].op != "XOR":
+        print(f"Adder not outputting to carry adder: {adder}")
+
+
+for carry_adder in carry_adders.values():
+    if carry_adder.out[0] != 'z':
+        bad_gates.append(carry_adder)
+        print(f"Exepcted carry adder to go to output: {carry_adder}")
+
+    add_in = None
+    if carry_adder.x in adders:
+        add_in = carry_adder.x
+    if carry_adder.y in adders:
+        add_in = carry_adder.y
+
+    if not add_in:
+        print(f"Carry adder has no adders as input: {carry_adder}")
+
+    carry_in = None
+    if carry_adder.x in carry_outs:
+        carry_in = carry_adder.x
+    if carry_adder.y in carry_outs:
+        carry_in = carry_adder.y
+
+    if not add_in:
+        print(f"Carry adder has no carry as input: {carry_adder}")
